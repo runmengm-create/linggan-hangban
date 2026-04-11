@@ -1,0 +1,2840 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>灵感航班 — 攒着的假期，就差一张机票</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <!-- Alpine.js -->
+    <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
+    <style>
+        :root {
+            /* 背景 */
+            --bg-primary: #F7F5F0;
+            --bg-card: #FFFFFF;
+            --bg-card-hover: #FFFFFF;
+            --bg-modal: #FFFFFF;
+
+            /* 文字 */
+            --text-primary: #111110;
+            --text-secondary: #6B6860;
+            --text-muted: #A8A59F;
+
+            /* 强调色 / 品牌色 */
+            --accent-primary: #111110;
+            --accent-blue: #1A56DB;
+            --accent-yellow: #FFC107;
+
+            /* 规则图标色 */
+            --rule-border: #E5E3DF;
+
+            /* 价格走势图 */
+            --chart-line: #111110;
+            --chart-fill: rgba(17, 17, 16, 0.03);
+            --chart-dot-current: #D4380D;
+
+            /* 字体 */
+            --font-display: 'Playfair Display', serif;
+            --font-body: 'DM Sans', sans-serif;
+            --font-mono: 'DM Mono', monospace;
+
+            /* 布局与间距 */
+            --max-width: 1140px;
+            --card-radius: 20px;
+            --modal-radius: 24px;
+            --space-card-padding: 24px;
+
+            /* 动效 */
+            --transition-base: 0.3s ease;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: var(--font-body);
+            -webkit-font-smoothing: antialiased;
+            overflow-x: hidden;
+            letter-spacing: -0.01em;
+        }
+
+        h1, h2, h3, .logo, .cities, .hero-title, .site-logo {
+            font-family: var(--font-display);
+        }
+
+        .container {
+            max-width: var(--max-width);
+            margin: 0 auto;
+            padding: 0 32px;
+        }
+
+        /* Unified Badge Style */
+        .badge {
+            background: var(--accent-yellow) !important;
+            color: #111110 !important;
+            font-family: var(--font-body);
+            font-size: 12px !important;
+            font-weight: 600 !important;
+            padding: 4px 10px !important;
+            border-radius: 100px !important;
+            border: none !important;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            width: fit-content;
+        }
+
+        .timestamp-badge {
+            background: rgba(0,0,0,0.45);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            color: rgba(255,255,255,0.85);
+            font-family: var(--font-mono);
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 100px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        /* Hero Section (Layer 1) */
+        .hero-section {
+            height: 70vh;
+            width: 100%;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding-bottom: 48px;
+            z-index: 10;
+            overflow: visible;
+        }
+
+        .hero-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        .hero-bg img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .hero-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to top, rgba(0,0,0,0.6) 0%, transparent 60%);
+            z-index: 0;
+        }
+
+        .hero-content {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            color: white;
+            margin-top: auto;
+            margin-bottom: 80px; /* Space between content and search bar */
+        }
+
+        .hero-title {
+            font-size: 64px;
+            font-weight: 900;
+            margin-bottom: 8px;
+            letter-spacing: -0.02em;
+        }
+
+        .hero-subtitle {
+            font-size: 18px;
+            color: rgba(255,255,255,0.8);
+            font-family: var(--font-body);
+            font-weight: 400;
+        }
+
+        /* Hero Search Capsule */
+        .hero-search-wrapper {
+            position: relative;
+            z-index: 1000;
+            width: 100%;
+            max-width: 680px;
+            margin: 0 auto;
+        }
+
+        .hero-search-capsule {
+            width: 100%;
+            height: 64px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(8px);
+            border-radius: 100px;
+            display: flex;
+            align-items: center;
+            padding: 0 8px 0 32px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            position: relative;
+            z-index: 1001;
+        }
+
+        .search-segment {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            height: 100%;
+            position: relative;
+        }
+
+        .search-segment:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 25%;
+            height: 50%;
+            width: 1px;
+            background: rgba(0,0,0,0.1);
+        }
+
+        .segment-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            font-weight: 700;
+            color: var(--text-muted);
+            margin-bottom: 2px;
+        }
+
+        .segment-input {
+            border: none;
+            background: transparent;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-primary);
+            outline: none;
+            width: 90%;
+            font-family: var(--font-body);
+        }
+
+        .search-btn-round {
+            width: 48px;
+            height: 48px;
+            background: var(--accent-blue);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            cursor: pointer;
+            border: none;
+            transition: var(--transition-base);
+            margin-left: 12px;
+        }
+
+        .search-btn-round:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(26, 86, 219, 0.4);
+        }
+
+        /* Header (Overlay on Hero) */
+        .site-header {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 32px 0;
+            z-index: 10;
+        }
+
+        .header-inner {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .site-logo {
+            font-size: 24px;
+            font-weight: 900;
+            color: white;
+            text-decoration: none;
+        }
+
+        .header-nav {
+            display: flex;
+            align-items: center;
+            gap: 24px;
+        }
+
+        .departure-capsule {
+            color: white;
+            font-size: 14px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .header-select-ghost {
+            background: transparent;
+            border: none;
+            color: white;
+            font-weight: 700;
+            cursor: pointer;
+            outline: none;
+            font-family: var(--font-body);
+            font-size: 14px;
+        }
+
+        .header-select-ghost option {
+            color: var(--text-primary);
+            background: white;
+        }
+
+        .scene-tag-capsule {
+            padding: 6px 16px;
+            border-radius: 100px;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(4px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition-base);
+        }
+
+        .scene-tag-capsule:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .scene-tag-capsule.active {
+            background: white;
+            color: var(--text-primary);
+        }
+
+        /* Layer 2: Featured Destinations (Horizontal Scroll) */
+        .featured-section {
+            padding: 48px 0;
+            background: white;
+            margin-top: 0;
+            position: relative;
+            z-index: 1;
+        }
+
+        .featured-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+        }
+
+        .featured-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: #111110;
+        }
+
+        .view-all-link {
+            font-size: 14px;
+            color: #6B6860;
+            text-decoration: none;
+        }
+
+        .featured-scroll-container {
+            display: flex;
+            gap: 20px;
+            overflow-x: auto;
+            padding-bottom: 24px;
+            scrollbar-width: none; /* Firefox */
+            scroll-behavior: smooth;
+        }
+
+        .featured-scroll-container::-webkit-scrollbar {
+            display: none; /* Chrome/Safari */
+        }
+
+        .featured-dest-card {
+            min-width: 280px;
+            height: 180px;
+            border-radius: 16px;
+            overflow: hidden;
+            display: flex;
+            cursor: pointer;
+            transition: var(--transition-base);
+            position: relative;
+            flex-shrink: 0;
+        }
+
+        .featured-dest-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+        }
+
+        .featured-card-left {
+            flex: 1;
+            padding: 24px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .featured-card-dest-name {
+            font-size: 24px;
+            font-weight: 700;
+            color: #111110;
+        }
+
+        .featured-card-price-hint {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        .featured-card-btn {
+            width: fit-content;
+            padding: 6px 16px;
+            background: #111110;
+            color: white;
+            font-size: 12px;
+            font-weight: 600;
+            border-radius: 8px;
+            margin-top: auto;
+        }
+
+        .featured-card-right {
+            width: 45%;
+            height: 100%;
+            position: relative;
+        }
+
+        .featured-card-right img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Layer 3: Special Offer Feed */
+        .feed-section {
+            padding: 48px 0 80px;
+        }
+
+        .feed-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .feed-title {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .feed-sort-hint {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .feed-filter-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px;
+            margin-bottom: 32px;
+        }
+
+        .filter-pill-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .type-pill-capsule {
+            padding: 8px 18px;
+            border-radius: 100px;
+            background: white;
+            border: 1px solid var(--rule-border);
+            color: var(--text-secondary);
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition-base);
+        }
+
+        .type-pill-capsule.active {
+            background: var(--text-primary);
+            color: white;
+            border-color: var(--text-primary);
+        }
+
+        .scene-pill-capsule {
+            padding: 6px 14px;
+            border-radius: 100px;
+            background: transparent;
+            border: 1px solid var(--rule-border);
+            color: var(--text-secondary);
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: var(--transition-base);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .scene-pill-capsule.active {
+            background: #E5E3DF;
+            color: var(--text-primary);
+            border-color: #E5E3DF;
+        }
+
+        .budget-control-inline {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            min-width: 240px;
+        }
+
+        .budget-slider-custom {
+            flex: 1;
+            height: 2px;
+            background: #E5E3DF;
+            -webkit-appearance: none;
+            outline: none;
+        }
+
+        .budget-slider-custom::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: var(--text-primary);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        /* Skeleton Screen */
+        #skeleton-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 32px;
+        }
+
+        .skeleton-card {
+            background: var(--bg-card);
+            border-radius: var(--card-radius);
+            overflow: hidden;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            display: flex;
+            flex-direction: column;
+            height: 420px;
+        }
+
+        .skeleton-img {
+            height: 200px;
+            background: #E8E6E1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .skeleton-body {
+            padding: 20px 24px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .skeleton-line {
+            border-radius: 4px;
+        }
+
+        .skeleton-title { width: 60%; height: 22px; background: #E8E6E1; margin-top: 16px; }
+        .skeleton-subtitle { width: 45%; height: 14px; background: #EDEBE6; margin-top: 8px; }
+        .skeleton-price { width: 35%; height: 28px; background: #E8E6E1; margin-top: 12px; }
+        .skeleton-tags { display: flex; gap: 6px; margin-top: 12px; }
+        .skeleton-tag { width: 60px; height: 24px; background: #EDEBE6; border-radius: 4px; }
+
+        .shimmer {
+            background: linear-gradient(
+                90deg,
+                #E8E6E1 25%,
+                #F2EFE9 50%,
+                #E8E6E1 75%
+            );
+            background-size: 200% 100%;
+            animation: shimmer 1.8s ease-in-out infinite;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        #real-grid {
+            display: none;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 32px;
+            opacity: 0;
+        }
+
+        .flight-card {
+            background: var(--bg-card);
+            border-radius: var(--card-radius);
+            overflow: hidden;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            transition: var(--transition-base);
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .flight-card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 12px 32px rgba(0,0,0,0.12);
+        }
+
+        .card-image-wrapper {
+            position: relative;
+            height: 200px;
+            overflow: hidden;
+        }
+
+        .card-image {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .flight-card:hover .card-image {
+            transform: scale(1.05);
+        }
+
+        .card-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 50%;
+            background: linear-gradient(to top, rgba(0,0,0,0.5), transparent);
+        }
+
+        .card-header-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            z-index: 2;
+        }
+
+        .card-body {
+            padding: 20px 24px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .cities {
+            font-size: 24px;
+            font-weight: 700;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .route-line {
+            font-family: var(--font-body);
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+        }
+
+        .price-area {
+            display: flex;
+            align-items: baseline;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .price-hero {
+            font-family: var(--font-mono);
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .original-price {
+            font-family: var(--font-mono);
+            font-size: 14px;
+            color: var(--text-muted);
+            text-decoration: line-through;
+        }
+
+        .rule-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .rule-tag {
+            font-size: 12px;
+            padding: 4px 8px;
+            border: 1px solid var(--rule-border);
+            border-radius: 6px;
+            color: var(--text-secondary);
+        }
+
+        .dates-info {
+            margin-top: auto;
+            font-size: 12px;
+            color: var(--text-secondary);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .pto-hint {
+            color: #D4380D;
+            font-weight: 500;
+        }
+
+        /* Drawer Styles */
+        .drawer-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.2);
+            z-index: 1000;
+            display: none;
+        }
+
+        .drawer-overlay.active {
+            display: block;
+        }
+
+        .drawer-content {
+            position: fixed;
+            top: 0;
+            right: 0;
+            width: 480px;
+            height: 100vh;
+            background: white;
+            z-index: 1001;
+            box-shadow: -8px 0 32px rgba(0,0,0,0.12);
+            transform: translateX(100%);
+            transition: 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .drawer-overlay.active + .drawer-content {
+            transform: translateX(0);
+        }
+
+        .drawer-scroll-area {
+            flex: 1;
+            overflow-y: auto;
+            padding-bottom: 100px; /* Space for sticky footer */
+        }
+
+        .drawer-header {
+            position: relative;
+            height: 220px;
+        }
+
+        .drawer-header-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .drawer-header-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: 24px;
+            background: linear-gradient(to top, rgba(0,0,0,0.6), transparent);
+            color: white;
+        }
+
+        .drawer-dest-name {
+            font-family: var(--font-display);
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .drawer-route-small {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .drawer-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: rgba(0,0,0,0.2);
+            border: none;
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            transition: var(--transition-base);
+        }
+
+        .drawer-close:hover {
+            background: rgba(0,0,0,0.4);
+        }
+
+        .drawer-body {
+            padding: 24px;
+        }
+
+        .drawer-price-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 12px;
+        }
+
+        .drawer-price-large {
+            font-family: var(--font-mono);
+            font-size: 36px;
+            font-weight: 700;
+            color: #111110;
+        }
+
+        .drawer-original-price {
+            font-family: var(--font-mono);
+            font-size: 16px;
+            color: var(--text-muted);
+            text-decoration: line-through;
+        }
+
+        .drawer-meta-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-secondary);
+            font-size: 12px;
+            margin-bottom: 24px;
+        }
+
+        .drawer-footer {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: 24px;
+            background: white;
+            border-top: 1px solid #F0F0F0;
+            display: flex;
+            gap: 12px;
+            z-index: 10;
+        }
+
+        .drawer-btn {
+            flex: 1;
+            height: 52px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-family: var(--font-body);
+            cursor: pointer;
+            transition: var(--transition-base);
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .drawer-btn-primary {
+            background: #111110;
+            color: white;
+        }
+
+        .drawer-btn-secondary {
+            background: white;
+            color: #111110;
+            border: 1px solid #111110;
+        }
+
+        /* Shift content when drawer is open */
+        body {
+            transition: padding-right 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body.drawer-open {
+            padding-right: 480px;
+        }
+
+        /* Switch UI */
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+
+        .switch input { opacity: 0; width: 0; height: 0; }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #E5E3DF;
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider { background-color: #111110; }
+        input:checked + .slider:before { transform: translateX(20px); }
+
+        /* Toast */
+        .toast-container {
+            position: fixed;
+            top: 24px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-100px);
+            background: #111110;
+            color: white;
+            padding: 12px 24px;
+            border-radius: 100px;
+            font-size: 14px;
+            font-weight: 600;
+            z-index: 2000;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+
+        .toast-container.active {
+            transform: translateX(-50%) translateY(0);
+        }
+
+        /* Animation */
+        .animate-fade-in {
+            animation: fadeIn 0.6s ease forwards;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Channel Modal */
+        .channel-modal-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1100;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(2px);
+        }
+
+        .channel-modal-overlay.active { display: flex; }
+
+        .channel-modal-content {
+            background: white;
+            padding: 32px;
+            border-radius: 24px;
+            width: 90%;
+            max-width: 400px;
+        }
+
+        .channel-title {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        .channel-card {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: var(--transition-base);
+            font-weight: 600;
+        }
+
+        .channel-card.primary { background: #FFF7ED; color: #EA580C; }
+        .channel-card.secondary { background: #F8FAFC; color: #475569; }
+        .channel-card:hover { transform: scale(1.02); filter: brightness(0.98); }
+
+        /* Hero Search Redesign */
+        .hero-dropdown-trigger {
+            cursor: pointer;
+            font-family: var(--font-body);
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--text-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            height: 100%;
+            text-align: center;
+        }
+
+        .hero-dropdown-trigger.placeholder {
+            color: var(--text-muted);
+        }
+
+        .hero-dropdown-menu {
+            position: absolute;
+            top: calc(100% + 12px);
+            left: 50%;
+            transform: translateX(-50%);
+            width: 240px;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 10px 32px rgba(0,0,0,0.12);
+            padding: 8px;
+            z-index: 99999;
+            border: 1px solid #E5E3DF;
+        }
+
+        .hero-dropdown-item {
+            padding: 12px 16px;
+            font-family: var(--font-body);
+            font-size: 14px;
+            color: #111110;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: 0.2s;
+            text-align: left;
+        }
+
+        .hero-dropdown-item:hover {
+            background: #F7F5F0;
+        }
+
+        .time-pill-group {
+            display: inline-flex;
+            gap: 6px;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .time-pill {
+            border: 1px solid #E5E3DF;
+            background: #FFFFFF;
+            color: #6B6860;
+            border-radius: 100px;
+            padding: 6px 12px;
+            font-family: var(--font-body);
+            font-size: 13px;
+            cursor: pointer;
+            transition: 0.25s;
+            white-space: nowrap;
+        }
+
+        .time-pill.active {
+            background: #111110;
+            color: #FFFFFF;
+            border-color: #111110;
+        }
+
+        .search-btn-text {
+            height: 48px;
+            background: var(--accent-blue);
+            border-radius: 100px;
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            cursor: pointer;
+            border: none;
+            transition: var(--transition-base);
+            font-family: var(--font-body);
+            font-size: 14px;
+            font-weight: 700;
+            margin-left: 12px;
+            white-space: nowrap;
+        }
+
+        .search-btn-text:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 15px rgba(26, 86, 219, 0.4);
+        }
+
+        /* End-of-feed CTA */
+        .feed-cta {
+            background: linear-gradient(to bottom, #F7F5F0, #EDEAE4);
+            padding: 64px 0;
+            text-align: center;
+        }
+
+        .cta-title {
+            font-family: var(--font-display);
+            font-size: 24px;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .cta-subtitle {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-top: 8px;
+            margin-bottom: 24px;
+        }
+
+        .cta-form {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-bottom: 32px;
+        }
+
+        .cta-input {
+            width: 320px;
+            background: white;
+            border: 1px solid var(--border-light);
+            border-radius: 12px;
+            padding: 14px 16px;
+            font-family: var(--font-body);
+            font-size: 14px;
+            outline: none;
+            transition: 0.2s;
+        }
+
+        .cta-input:disabled {
+            background: #F2F0EB;
+            color: var(--text-muted);
+        }
+
+        .cta-input.error {
+            border-color: #D4380D;
+        }
+
+        .cta-btn {
+            background: var(--text-primary);
+            color: white;
+            border: none;
+            border-radius: 12px;
+            padding: 14px 24px;
+            font-family: var(--font-body);
+            font-size: 14px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.3s ease;
+        }
+
+        .cta-btn.success {
+            background: #34D399;
+        }
+
+        .cta-metrics {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 40px;
+            margin-top: 32px;
+        }
+
+        .metric-item {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .metric-value {
+            font-family: var(--font-mono);
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+
+        .metric-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .metric-divider {
+            width: 1px;
+            height: 40px;
+            background: #D9D6D0;
+        }
+
+        /* Footer Redesign */
+        footer {
+            background: #111110;
+            padding: 48px 40px 32px;
+            color: white;
+        }
+
+        .footer-content {
+            max-width: var(--max-width);
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 40px;
+            margin-bottom: 48px;
+            text-align: left;
+        }
+
+        .footer-logo {
+            font-family: var(--font-display);
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .footer-subtitle {
+            font-size: 12px;
+            color: rgba(255,255,255,0.35);
+        }
+
+        .status-indicator {
+            margin-top: 20px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            color: rgba(255,255,255,0.5);
+            font-size: 12px;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            background: #34D399;
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.4; transform: scale(0.75); }
+        }
+
+        .footer-col-title {
+            font-size: 11px;
+            color: rgba(255,255,255,0.35);
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+        }
+
+        .footer-links {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .footer-link {
+            font-size: 13px;
+            color: rgba(255,255,255,0.65);
+            text-decoration: none;
+            transition: 0.2s;
+        }
+
+        .footer-link:hover {
+            color: white;
+        }
+
+        .footer-disclaimer-new {
+            font-size: 11px;
+            color: rgba(255,255,255,0.35);
+            line-height: 1.7;
+            margin-top: 16px;
+        }
+
+        .footer-bottom {
+            max-width: var(--max-width);
+            margin: 0 auto;
+            border-top: 1px solid rgba(255,255,255,0.06);
+            padding-top: 20px;
+            text-align: center;
+            font-size: 11px;
+            color: rgba(255,255,255,0.25);
+        }
+
+        .chart-container {
+            margin: 24px 0;
+            padding: 20px;
+            border: 1px solid #E5E3DF;
+            border-radius: 16px;
+        }
+
+        .chart-title {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .chart-svg {
+            width: 100%;
+            height: 100px;
+        }
+
+        .chart-conclusion {
+            margin-top: 12px;
+            font-size: 12px;
+            color: #D4380D;
+            font-weight: 600;
+            text-align: center;
+        }
+
+        .fee-calculator {
+            margin-bottom: 24px;
+        }
+
+        .fee-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid #F0F0F0;
+        }
+
+        .fee-label {
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .fee-hint {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .total-price-area {
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        .total-amount {
+            font-size: 32px;
+            font-weight: 900;
+            font-family: var(--font-mono);
+        }
+
+        .rule-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .rule-tag {
+            font-size: 12px;
+            padding: 4px 8px;
+            border: 1px solid var(--rule-border);
+            border-radius: 6px;
+            color: var(--text-secondary);
+        }
+
+        /* Skeleton Screen */
+        .skeleton-card {
+            background: var(--bg-card);
+            border-radius: var(--card-radius);
+            overflow: hidden;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            display: flex;
+            flex-direction: column;
+            height: 420px; /* Match real card height */
+        }
+
+        .skeleton-img {
+            height: 200px;
+            background: #E8E6E1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .skeleton-body {
+            padding: 20px 24px;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .skeleton-line {
+            background: #E8E6E1;
+            border-radius: 4px;
+        }
+
+        .skeleton-title { width: 70%; height: 20px; }
+        .skeleton-subtitle { width: 50%; height: 14px; background: #EDEBE6; }
+        .skeleton-price { width: 40%; height: 28px; margin-top: 8px; }
+
+        .shimmer {
+            background: linear-gradient(90deg, #E8E6E1 25%, #F0EDE8 50%, #E8E6E1 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* Data Sync Indicator */
+        .sync-indicator {
+            position: fixed;
+            left: 20px;
+            bottom: 20px;
+            background: rgba(255,255,255,0.9);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border-radius: 100px;
+            padding: 6px 12px;
+            border: 1px solid rgba(0,0,0,0.08);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            z-index: 900;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        .sync-icon {
+            width: 12px;
+            height: 12px;
+            border: 2px solid #E5E3DF;
+            border-top-color: #6B6860;
+            border-radius: 50%;
+            animation: spin 1.5s linear infinite;
+        }
+
+        .sync-icon.fast {
+            animation-duration: 0.3s;
+        }
+
+        .sync-text {
+            font-size: 11px;
+            color: #6B6860;
+            font-weight: 500;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Heat Bubble for Scarce */
+        .heat-bubble {
+            background: rgba(0,0,0,0.45);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            color: rgba(255,255,255,0.85);
+            font-family: var(--font-mono);
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 100px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            margin-top: 4px;
+        }
+
+        /* Rest of existing styles... */
+    </style>
+
+        /* Rest of existing styles... */
+    </style>
+</head>
+<body x-data="flightApp()">
+    <!-- Layer 1: Hero Section -->
+    <section class="hero-section">
+        <div class="hero-bg">
+            <template x-for="(img, index) in heroImages" :key="index">
+                <img :src="img" 
+                     alt="Hero Background"
+                     loading="eager"
+                     :style="{ 
+                         position: 'absolute', 
+                         top: 0, 
+                         left: 0, 
+                         width: '100%', 
+                         height: '100%', 
+                         objectFit: 'cover', 
+                         opacity: currentHeroIndex === index ? 1 : 0, 
+                         transition: 'opacity 1.2s ease' 
+                     }"
+                     :onerror="'this.src=\'https://picsum.photos/1600/900?random=hero' + index + '\''">
+            </template>
+        </div>
+        <div class="hero-overlay"></div>
+
+        <!-- Transparent Header -->
+        <header class="site-header">
+            <div class="container">
+                <div class="header-inner">
+                    <a href="#" class="site-logo">灵感航班</a>
+                    <nav class="header-nav">
+                        <div class="departure-capsule">
+                            <span>从</span>
+                            <select class="header-select-ghost" x-model="departureCity">
+                                <optgroup label="华东">
+                                    <option value="上海">上海 (SHA/PVG)</option>
+                                    <option value="南京">南京</option>
+                                    <option value="杭州">杭州</option>
+                                    <option value="宁波">宁波</option>
+                                    <option value="合肥">合肥</option>
+                                </optgroup>
+                                <optgroup label="华北">
+                                    <option value="北京">北京 (PEK/PKX)</option>
+                                    <option value="天津">天津</option>
+                                    <option value="石家庄">石家庄</option>
+                                    <option value="济南">济南</option>
+                                    <option value="青岛">青岛</option>
+                                </optgroup>
+                                <optgroup label="华南">
+                                    <option value="广州">广州</option>
+                                    <option value="深圳">深圳</option>
+                                    <option value="厦门">厦门</option>
+                                    <option value="福州">福州</option>
+                                    <option value="海口">海口</option>
+                                </optgroup>
+                                <optgroup label="华中">
+                                    <option value="武汉">武汉</option>
+                                    <option value="长沙">长沙</option>
+                                    <option value="郑州">郑州</option>
+                                    <option value="成都">成都</option>
+                                    <option value="重庆">重庆</option>
+                                </optgroup>
+                                <optgroup label="东北/西北">
+                                    <option value="沈阳">沈阳</option>
+                                    <option value="哈尔滨">哈尔滨</option>
+                                    <option value="西安">西安</option>
+                                    <option value="乌鲁木齐">乌鲁木齐</option>
+                                    <option value="昆明">昆明</option>
+                                </optgroup>
+                            </select>
+                            <span>出发</span>
+                        </div>
+                        <div style="display: flex; gap: 16px; align-items: center;">
+                            <!-- Alert Center Trigger -->
+                            <div class="alert-trigger" @click="isAlertCenterOpen = true" style="position: relative; cursor: pointer; display: flex; align-items: center; color: white;">
+                                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                                    <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                                </svg>
+                                <div x-show="notifiedFlightIds.length > 0 || monitoredDestinations.length > 0" 
+                                     style="position: absolute; top: -2px; right: -2px; width: 8px; height: 8px; background: #FFC107; border-radius: 50%; border: 1.5px solid #111110;">
+                                </div>
+                            </div>
+                        </div>
+                    </nav>
+                </div>
+            </div>
+        </header>
+
+        <!-- Hero Content -->
+        <div class="hero-content">
+            <h1 class="hero-title">灵感航班</h1>
+            <p class="hero-subtitle">好价不等人，下单不纠结</p>
+        </div>
+
+        <!-- Hero Search Capsule -->
+        <div class="hero-search-wrapper">
+            <div class="hero-search-capsule">
+                <!-- Segment 1: Departure -->
+                <div class="search-segment">
+                    <select class="segment-input" x-model="departureCity" style="appearance: none; -webkit-appearance: none; cursor: pointer; text-align: center; text-align-last: center; font-size: 16px; font-weight: 700;">
+                        <option value="上海">上海 (SHA/PVG)</option>
+                        <option value="南京">南京</option>
+                        <option value="杭州">杭州</option>
+                        <option value="北京">北京</option>
+                        <option value="广州">广州</option>
+                        <option value="深圳">深圳</option>
+                        <option value="成都">成都</option>
+                    </select>
+                </div>
+                <!-- Segment 2: Scene Selection (Custom Dropdown) -->
+                <div class="search-segment" style="position: relative;" @click.outside="isHeroSceneDropdownOpen = false">
+                    <div class="hero-dropdown-trigger" 
+                         :class="{ 'placeholder': selectedHeroScene === null }"
+                         @click="isHeroSceneDropdownOpen = !isHeroSceneDropdownOpen"
+                         x-text="heroSceneOptions.find(o => o.value === selectedHeroScene)?.label || '✨ 想去哪类地方'">
+                    </div>
+                    
+                    <div class="hero-dropdown-menu" x-show="isHeroSceneDropdownOpen" x-transition>
+                        <template x-for="option in heroSceneOptions" :key="option.value">
+                            <div class="hero-dropdown-item" 
+                                 @click="selectedHeroScene = option.value; isHeroSceneDropdownOpen = false"
+                                 x-text="option.label">
+                            </div>
+                        </template>
+                    </div>
+                </div>
+                <!-- Segment 3: Time Intent (Custom Dropdown) -->
+                <div class="search-segment" style="position: relative;" @click.outside="isTimeIntentDropdownOpen = false">
+                    <div class="hero-dropdown-trigger" 
+                         @click="isTimeIntentDropdownOpen = !isTimeIntentDropdownOpen">
+                        <span x-text="selectedTimeIntent"></span>
+                        <span style="margin-left: 6px; font-size: 10px; color: var(--text-muted);">∨</span>
+                    </div>
+                    
+                    <div class="hero-dropdown-menu" x-show="isTimeIntentDropdownOpen" x-transition>
+                        <template x-for="option in timeIntentOptions" :key="option">
+                            <div class="hero-dropdown-item" 
+                                 style="display: flex; justify-content: space-between; align-items: center;"
+                                 @click="if(option === '🗓️ 指定日期...') { $refs.dateInput.showPicker() } else { selectedTimeIntent = option; isTimeIntentDropdownOpen = false }">
+                                <span x-text="option"></span>
+                                <span x-show="selectedTimeIntent === option" style="color: #34D399; font-size: 12px;">✓</span>
+                            </div>
+                        </template>
+                        <!-- Hidden date input to trigger picker -->
+                        <input type="date" x-ref="dateInput" style="position: absolute; opacity: 0; pointer-events: none; width: 0; height: 0;"
+                               @change="selectedTimeIntent = '📅 ' + $event.target.value; isTimeIntentDropdownOpen = false">
+                    </div>
+                </div>
+                <!-- Search Button -->
+                <button class="search-btn-text" @click="scrollToFeed()">
+                    发现好价 →
+                </button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Layer 2: Featured Destinations -->
+    <section class="featured-section">
+        <div class="container">
+            <div class="featured-header">
+                <h2 class="featured-title">热门目的地</h2>
+                <a href="#" class="view-all-link">查看全部 →</a>
+            </div>
+            <div class="featured-scroll-container">
+                <template x-for="dest in featuredDestinations" :key="dest.name">
+                    <div class="featured-dest-card" @click="searchQuery = dest.name; scrollToFeed()">
+                        <div class="featured-card-left" :style="'background-color: ' + dest.color">
+                            <div>
+                                <div class="featured-card-dest-name" x-text="dest.name"></div>
+                                <div class="featured-card-price-hint" x-text="'最低 ¥' + dest.minPrice + ' 起'"></div>
+                            </div>
+                            <div class="featured-card-btn">查看</div>
+                        </div>
+                        <div class="featured-card-right">
+                            <img :src="'https://images.weserv.nl/?url=https://images.unsplash.com/featured/400x300/?' + encodeURIComponent(dest.name) + ',landscape,scenic'" 
+                                 :alt="dest.name"
+                                 :onerror="'this.src=\'https://picsum.photos/400/300?random=' + dest.name + '\''">
+                            <div class="badge" style="position: absolute; bottom: 12px; left: -10px; z-index: 2;">
+                                <span x-text="dest.tag"></span>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+        </div>
+    </section>
+
+    <!-- Layer 3: Special Offer Feed -->
+    <section class="feed-section" id="feed-anchor">
+        <div class="container">
+            <div class="feed-header-row">
+                <h2 class="feed-title">今日特价情报</h2>
+                <span class="feed-sort-hint">按性价比排序</span>
+            </div>
+
+            <!-- Filter Bar -->
+            <div class="feed-filter-bar">
+                <div class="filter-pill-group">
+                    <div class="type-pill-capsule" :class="{ 'active': selectedType === 'all' }" @click="selectedType = 'all'">🌏 国际全部</div>
+                    <div class="type-pill-capsule" :class="{ 'active': selectedType === 'domestic' }" @click="selectedType = 'domestic'">🇨🇳 国内</div>
+                    <div class="type-pill-capsule" :class="{ 'active': selectedType === 'visa-free' }" @click="selectedType = 'visa-free'">✅ 免签/落地签</div>
+                </div>
+                
+                <div class="filter-pill-group">
+                    <template x-for="scene in scenes" :key="scene.id">
+                        <div class="scene-pill-capsule" 
+                             :class="{ 'active': selectedScenes.includes(scene.label) }"
+                             @click="toggleScene(scene.label)">
+                            <span x-text="scene.icon"></span>
+                            <span x-text="scene.label"></span>
+                        </div>
+                    </template>
+                </div>
+
+                <div class="budget-control-inline">
+                    <span style="font-size: 13px; font-weight: 600; color: var(--text-secondary); min-width: 80px;" x-text="'预算 ¥' + budgetLimit"></span>
+                    <input type="range" min="500" max="3000" step="100" x-model="budgetLimit" class="budget-slider-custom">
+                </div>
+            </div>
+
+            <!-- Card Grid -->
+            <div id="skeleton-grid">
+                <template x-for="i in 6" :key="i">
+                    <div class="skeleton-card">
+                        <div class="skeleton-img shimmer"></div>
+                        <div class="skeleton-body">
+                            <div class="skeleton-line skeleton-title shimmer"></div>
+                            <div class="skeleton-line skeleton-subtitle shimmer"></div>
+                            <div class="skeleton-line skeleton-price shimmer"></div>
+                            <div class="skeleton-tags">
+                                <div class="skeleton-tag shimmer"></div>
+                                <div class="skeleton-tag shimmer"></div>
+                                <div class="skeleton-tag shimmer"></div>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+
+            <div id="real-grid">
+                <template x-for="flight in filteredFlights" :key="flight.id">
+                    <div class="flight-card" 
+                         @click="openModal(flight)"
+                         :style="isHeroMatched(flight) ? 'opacity: 1; transform: scale(1);' : 'opacity: 0; transform: scale(0.95); pointer-events: none;'"
+                         style="transition: 0.25s ease;">
+                        <div class="card-image-wrapper">
+                            <img :src="'https://images.weserv.nl/?url=https://images.unsplash.com/featured/800x500/?' + encodeURIComponent(flight.to) + ',landscape,scenic'" 
+                                 class="card-image" 
+                                 :alt="flight.to"
+                                 :onerror="'this.onerror=null;this.src=\'https://picsum.photos/800/500?random=' + (parseInt(flight.id) % 20 + 1) + '\''">
+                            <div class="card-overlay"></div>
+                            <div class="card-header-overlay">
+                                <div style="display: flex; justify-content: space-between; width: 100%; align-items: flex-start;">
+                                    <div style="display: flex; flex-direction: column; gap: 4px;">
+                                        <div class="badge">
+                                            <span x-text="getBadgeText(flight)"></span>
+                                        </div>
+                                        <!-- Heat Bubble for Scarce -->
+                                        <div x-show="flight.badgeType === 'scarce'" class="heat-bubble">
+                                            <span x-text="'👁 ' + getFixedRandom(flight.id) + '人正在查看'"></span>
+                                        </div>
+                                    </div>
+                                    <div class="timestamp-badge">
+                                        <span x-text="'🕐 ' + flight.discoveredMinutesAgo + '分钟前发现'"></span>
+                                    </div>
+                                </div>
+                                <div style="position: absolute; bottom: 16px; right: 16px; display: flex; flex-direction: column; gap: 8px; align-items: flex-end;">
+                                    <div x-show="isNotified(flight.id)" class="badge" style="background: rgba(0, 201, 167, 0.2) !important; color: #00C9A7 !important;">
+                                        <span>🔔</span> 监测中
+                                    </div>
+                                    <div class="badge" style="background: rgba(0,0,0,0.3) !important; color: white !important; border: 1px solid rgba(255,255,255,0.2) !important;" x-text="flight.domestic ? '国内' : '国际'"></div>
+                                    <div x-show="!flight.domestic" class="badge" style="background: rgba(255,255,255,0.9) !important; color: #111110 !important;" x-text="flight.visaType"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="card-body">
+                            <div class="cities" x-text="flight.to"></div>
+                            <div class="route-line" x-text="flight.from + ' → ' + flight.to"></div>
+                            
+                            <div class="price-area">
+                                <div class="price-hero">
+                                    <span>¥</span><span x-text="flight.price"></span>
+                                </div>
+                                <div class="original-price" x-text="'¥' + flight.originalPrice"></div>
+                            </div>
+
+                            <div class="rule-tags">
+                                <div class="rule-tag" x-text="flight.airline"></div>
+                                <div class="rule-tag" x-text="flight.flightType"></div>
+                                <div class="rule-tag" x-text="flight.luggageIncluded ? '🧳 含托运' : '🧳 无托运'"></div>
+                            </div>
+
+                            <div class="dates-info">
+                                <div x-text="formatDate(flight.departDate) + ' — ' + formatDate(flight.returnDate)"></div>
+                                <div class="pto-hint" x-show="flight.ptoDays > 0" x-text="'📅 请' + flight.ptoDays + '天假'"></div>
+                            </div>
+                        </div>
+                    </div>
+                </template>
+            </div>
+            
+            <!-- Empty State -->
+            <div x-show="filteredFlights.length === 0" style="text-align: center; padding: 100px 0; color: var(--text-secondary);">
+                <div style="font-size: 3rem; margin-bottom: 20px;">✈️</div>
+                <p>暂无匹配航线，试试调整筛选条件</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Toast Container -->
+    <div class="toast-container" :class="{ 'active': toastVisible }">
+        <span>✓</span>
+        <span x-text="toastMessage"></span>
+    </div>
+
+    <!-- Data Sync Indicator -->
+    <div class="sync-indicator">
+        <div class="sync-icon" :class="{ 'fast': syncFast }"></div>
+        <div class="sync-text">数据实时更新中</div>
+    </div>
+
+    <!-- Booking Channel Modal -->
+    <div class="channel-modal-overlay" :class="{ 'active': isChannelModalOpen }" @click.self="isChannelModalOpen = false">
+        <div class="channel-modal-content">
+            <div class="channel-title">选择预订渠道</div>
+            <div class="channel-options">
+                <div class="channel-card primary" @click="selectChannel('美团旅行')">
+                    <span>🟠 美团旅行</span>
+                    <div class="recommend-badge">推荐</div>
+                    <span>→</span>
+                </div>
+                <div class="channel-card secondary" @click="selectChannel('航司官网')">
+                    <span>✈️ 航司官网</span>
+                    <span>→</span>
+                </div>
+                <div class="channel-card secondary" @click="selectChannel('其他平台')">
+                    <span>🔗 其他平台</span>
+                    <span>→</span>
+                </div>
+            </div>
+            <div style="text-align: center; font-size: 11px; color: #A8A59F; margin-top: 24px;">
+                以上为示意跳转，实际需接入美团旅行机票API
+            </div>
+        </div>
+    </div>
+
+    <!-- Side Drawer -->
+    <!-- Alert Center Drawer -->
+    <div class="drawer-overlay" :class="{ 'active': isAlertCenterOpen }" @click="isAlertCenterOpen = false"></div>
+    <div class="drawer-content" 
+         style="background: #F7F5F0; z-index: 2001;" 
+         :style="isAlertCenterOpen ? 'transform: translateX(0)' : 'transform: translateX(100%)'">
+        <div class="drawer-header" style="height: auto; padding: 32px 24px; background: white; border-bottom: 1px solid #E5E3DF;">
+            <h2 style="font-family: var(--font-display); font-size: 24px; color: var(--text-primary);">我的提醒中心</h2>
+            <p style="font-size: 13px; color: var(--text-secondary); margin-top: 4px;">为您持续监控全球特价航线</p>
+            <button class="drawer-close" @click="isAlertCenterOpen = false" style="background: #F0F0F0; color: #111110;">✕</button>
+        </div>
+        
+        <div class="drawer-scroll-area" style="padding: 24px;">
+            <!-- Section: Monitored Destinations -->
+            <div style="margin-bottom: 32px;">
+                <h3 style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 16px;">正在监控的目的地</h3>
+                <div x-show="monitoredDestinations.length === 0" style="padding: 32px; text-align: center; background: white; border-radius: 16px; border: 1px dashed #E5E3DF; color: var(--text-muted); font-size: 13px;">
+                    暂无监控的目的地
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 12px;">
+                    <template x-for="(dest, index) in monitoredDestinations" :key="index">
+                        <div style="display: flex; justify-content: space-between; align-items: center; background: white; padding: 16px 20px; border-radius: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.04);">
+                            <div>
+                                <div style="font-size: 15px; font-weight: 700; color: var(--text-primary); cursor: pointer;" 
+                                     @click="searchQuery = dest; scrollToFeed(); isAlertCenterOpen = false"
+                                     x-text="dest"></div>
+                                <div style="font-size: 11px; color: #34D399; margin-top: 2px;">● 实时监测中</div>
+                            </div>
+                            <button @click="monitoredDestinations.splice(index, 1)" style="border: none; background: transparent; color: var(--text-muted); cursor: pointer; padding: 4px;">
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                            </button>
+                        </div>
+                    </template>
+                </div>
+            </div>
+            
+            <!-- Section: Monitored Flights -->
+            <div>
+                <h3 style="font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-muted); margin-bottom: 16px;">正在监控的航线</h3>
+                <div x-show="notifiedFlightIds.length === 0" style="padding: 32px; text-align: center; background: white; border-radius: 16px; border: 1px dashed #E5E3DF; color: var(--text-muted); font-size: 13px;">
+                    暂无监控的航线
+                </div>
+                <div style="display: flex; flex-direction: column; gap: 16px;">
+                    <template x-for="fId in notifiedFlightIds" :key="fId">
+                        <template x-if="flights.find(f => f.id === fId)">
+                            <div @click="openModal(flights.find(f => f.id === fId)); isAlertCenterOpen = false" 
+                                 style="cursor: pointer; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); display: flex;">
+                                <div style="width: 100px; height: 100px;">
+                                    <img :src="'https://images.weserv.nl/?url=https://images.unsplash.com/featured/200x200/?' + encodeURIComponent(flights.find(f => f.id === fId).to) + ',landscape,scenic'" 
+                                         style="width: 100%; height: 100%; object-fit: cover;">
+                                </div>
+                                <div style="flex: 1; padding: 12px 16px; display: flex; flex-direction: column; justify-content: space-between;">
+                                    <div>
+                                        <div style="font-size: 14px; font-weight: 700; color: var(--text-primary);" x-text="flights.find(f => f.id === fId).to"></div>
+                                        <div style="font-size: 11px; color: var(--text-secondary);" x-text="flights.find(f => f.id === fId).from + ' → ' + flights.find(f => f.id === fId).to"></div>
+                                    </div>
+                                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                                        <div style="font-family: var(--font-mono); font-size: 16px; font-weight: 700; color: var(--text-primary);">
+                                            ¥<span x-text="flights.find(f => f.id === fId).price"></span>
+                                        </div>
+                                        <button @click.stop="toggleNotification(fId)" style="border: none; background: transparent; color: var(--text-muted); cursor: pointer; font-size: 12px;">
+                                            取消监控
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </template>
+                    </template>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="drawer-overlay" :class="{ 'active': isModalOpen }" @click="closeModal()"></div>
+    <div class="drawer-content" :style="isModalOpen ? 'transform: translateX(0)' : 'transform: translateX(100%)'">
+        <template x-if="selectedFlight">
+            <div style="height: 100%; display: flex; flex-direction: column; position: relative;">
+                <div class="drawer-scroll-area">
+                    <!-- Drawer Header -->
+                    <div class="drawer-header">
+                        <img :src="'https://images.weserv.nl/?url=https://images.unsplash.com/featured/800x500/?' + encodeURIComponent(selectedFlight.to) + ',landscape,scenic'" 
+                             class="drawer-header-img" 
+                             :alt="selectedFlight.to"
+                             :onerror="'this.onerror=null;this.src=\'https://picsum.photos/800/500?random=' + (parseInt(selectedFlight.id) % 20 + 1) + '\''">
+                        <div class="drawer-header-overlay">
+                            <div class="drawer-dest-name" x-text="selectedFlight.to"></div>
+                            <div class="drawer-route-small" x-text="selectedFlight.from + ' → ' + selectedFlight.to"></div>
+                        </div>
+                        <button class="drawer-close" @click="closeModal()">✕</button>
+                    </div>
+
+                    <div class="drawer-body">
+                        <!-- Core Info -->
+                        <div class="drawer-price-row">
+                            <div class="drawer-price-large">
+                                <span style="font-size: 24px;">¥</span><span x-text="selectedFlight.price"></span>
+                            </div>
+                            <div class="drawer-original-price" x-text="'¥' + selectedFlight.originalPrice"></div>
+                            <div class="badge">
+                                <span x-text="'-' + Math.round((selectedFlight.originalPrice - selectedFlight.price) / selectedFlight.originalPrice * 100) + '%'"></span>
+                            </div>
+                        </div>
+
+                        <!-- Timestamp Row -->
+                        <div class="drawer-meta-row">
+                            <span x-text="'🕐 ' + selectedFlight.discoveredMinutesAgo + '分钟前发现'"></span>
+                            <span style="margin: 0 4px; color: #E5E3DF;">·</span>
+                            <span x-text="'已有 ' + selectedFlight.viewCount + ' 人查看'"></span>
+                        </div>
+
+                        <!-- Price Trend -->
+                        <div class="chart-container" style="padding: 16px; border-radius: 12px; margin-bottom: 24px;">
+                            <div style="font-size: 12px; color: #6B6860; margin-bottom: 8px; text-align: left; font-family: var(--font-body);" 
+                                 x-text="'「当前价格处于该航线历史低价区（前 ' + (100 - selectedFlight.percentileLow) + '%），过去30天未出现更低价」'"></div>
+                            <div class="chart-title">
+                                <span>过去90天价格走势</span>
+                                <span x-text="'当前 ¥' + selectedFlight.price" style="font-family: var(--font-mono)"></span>
+                            </div>
+                            <svg class="chart-svg" viewBox="0 0 400 100" preserveAspectRatio="none" style="height: 80px;">
+                                <defs>
+                                    <linearGradient id="chartGradientDrawer" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stop-color="var(--chart-line)" stop-opacity="0.05" />
+                                        <stop offset="100%" stop-color="var(--chart-line)" stop-opacity="0" />
+                                    </linearGradient>
+                                </defs>
+                                <path :d="generatePath(selectedFlight.priceHistory)" fill="url(#chartGradientDrawer)" />
+                                <path :d="generatePath(selectedFlight.priceHistory, false)" fill="none" stroke="var(--chart-line)" stroke-width="1.5" />
+                                <circle :cx="390" :cy="getPriceY(selectedFlight.price, selectedFlight.priceHistory)" r="4" fill="var(--chart-dot-current)" />
+                            </svg>
+                            <div class="chart-conclusion" x-text="'当前价格低于过去90天 ' + selectedFlight.percentileLow + '% 的时间'"></div>
+                        </div>
+
+                        <!-- Fee Calculator -->
+                        <div class="fee-calculator">
+                            <div class="fee-item">
+                                <div class="fee-info">
+                                    <div class="fee-label">🧳 托运行李 (20kg)</div>
+                                    <div class="fee-hint" x-text="selectedFlight.luggageIncluded ? '已包含在票价内' : '选购托运行李 ¥' + selectedFlight.luggageFee"></div>
+                                </div>
+                                <label class="switch" x-show="!selectedFlight.luggageIncluded">
+                                    <input type="checkbox" x-model="addLuggage">
+                                    <span class="slider"></span>
+                                </label>
+                                <span x-show="selectedFlight.luggageIncluded" style="color: #111110; font-size: 14px; font-weight: 600;">已含</span>
+                            </div>
+                            <div class="fee-item">
+                                <div class="fee-info">
+                                    <div class="fee-label">💺 提前选座</div>
+                                    <div class="fee-hint" x-text="'选购心仪座位 ¥' + selectedFlight.seatFee"></div>
+                                </div>
+                                <label class="switch">
+                                    <input type="checkbox" x-model="addSeat">
+                                    <span class="slider"></span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Rule Tags (Table replacement) -->
+                        <div style="margin-top: 32px;">
+                            <div style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">规则详情</div>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+                                <div class="rule-tag" style="display: flex; justify-content: space-between;">
+                                    <span style="color: var(--text-secondary);">航空公司</span>
+                                    <span x-text="selectedFlight.airline" style="color: var(--text-primary); font-weight: 500;"></span>
+                                </div>
+                                <div class="rule-tag" style="display: flex; justify-content: space-between;">
+                                    <span style="color: var(--text-secondary);">航班类型</span>
+                                    <span x-text="selectedFlight.flightType" style="color: var(--text-primary); font-weight: 500;"></span>
+                                </div>
+                                <div class="rule-tag" style="display: flex; justify-content: space-between;">
+                                    <span style="color: var(--text-secondary);">飞行时长</span>
+                                    <span x-text="selectedFlight.duration" style="color: var(--text-primary); font-weight: 500;"></span>
+                                </div>
+                                <div class="rule-tag" style="display: flex; justify-content: space-between;">
+                                    <span style="color: var(--text-secondary);">退改规则</span>
+                                    <span x-text="selectedFlight.refundable ? '可退改' : '不可退改'" style="color: var(--text-primary); font-weight: 500;"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="total-price-area" style="margin-top: 32px; border-top: 1px dashed #E5E3DF; padding-top: 24px; padding-bottom: 24px;">
+                            <div style="font-size: 13px; color: var(--text-secondary); margin-bottom: 4px; font-weight: 600; text-transform: uppercase;">预计总花费</div>
+                            <div class="total-amount">
+                                <span style="font-size: 20px;">¥</span>
+                                <span x-text="calculateTotalPrice()"></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Drawer Footer -->
+                <div class="drawer-footer">
+                    <button class="drawer-btn drawer-btn-secondary" @click="toggleNotification(selectedFlight.id)">
+                        <span x-show="!isNotified(selectedFlight.id)">🔔 降价通知我</span>
+                        <span x-show="isNotified(selectedFlight.id)" style="color: #111110">✓ 已订阅</span>
+                    </button>
+                    <button class="drawer-btn drawer-btn-primary" @click="isChannelModalOpen = true">
+                        <span>立即预订 →</span>
+                    </button>
+                </div>
+            </div>
+        </template>
+    </div>
+
+    <!-- End-of-feed CTA Section -->
+    <section class="feed-cta">
+        <div class="container">
+            <h2 class="cta-title">没找到心仪的灵感？让雷达帮你盯着。</h2>
+            <p class="cta-subtitle">输入目的地，一旦出现特价立即通知你</p>
+            
+            <div class="cta-form" x-data="{ dest: '', isSubscribed: false, isError: false }">
+                <input type="text" 
+                       class="cta-input" 
+                       :class="{ 'error': isError }"
+                       :placeholder="isError ? '请先输入目的地' : '输入目的地，如：东京、三亚'" 
+                       x-model="dest"
+                       :disabled="isSubscribed">
+                <button class="cta-btn" 
+                        :class="{ 'success': isSubscribed }"
+                        @click="if(dest.trim()){ 
+                            isSubscribed = true; 
+                            isError = false; 
+                            $root.__x.$data.monitoredDestinations.push(dest.trim());
+                            $root.__x.$data.showToast('已为您开启 ' + dest.trim() + ' 的降价提醒');
+                        } else { isError = true; }">
+                    <span x-show="!isSubscribed">开启降价提醒</span>
+                    <span x-show="isSubscribed" x-text="'✓ 已开启 ' + dest + ' 的降价提醒'"></span>
+                </button>
+            </div>
+
+            <div class="cta-metrics">
+                <div class="metric-item">
+                    <span class="metric-value">127</span>
+                    <span class="metric-label">今日新增好价</span>
+                </div>
+                <div class="metric-divider"></div>
+                <div class="metric-item">
+                    <span class="metric-value">-43%</span>
+                    <span class="metric-label">平均降幅</span>
+                </div>
+                <div class="metric-divider"></div>
+                <div class="metric-item">
+                    <span class="metric-value">28</span>
+                    <span class="metric-label">用户平均决策 (秒)</span>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer Redesign -->
+    <footer>
+        <div class="footer-content">
+            <!-- Left Col -->
+            <div class="footer-col">
+                <div class="footer-logo">灵感航班</div>
+                <div class="footer-subtitle">攒着的假期，就差一张机票</div>
+                <div class="status-indicator">
+                    <div class="status-dot"></div>
+                    <span>数据实时更新中</span>
+                </div>
+            </div>
+            
+            <!-- Middle Col -->
+            <div class="footer-col">
+                <div class="footer-col-title">产品功能</div>
+                <ul class="footer-links">
+                    <li><a href="#" class="footer-link">特价情报</a></li>
+                    <li><a href="#" class="footer-link">热门目的地</a></li>
+                    <li><a href="#" class="footer-link">降价订阅</a></li>
+                    <li><a href="#" class="footer-link">好价预测原理</a></li>
+                </ul>
+            </div>
+            
+            <!-- Right Col -->
+            <div class="footer-col">
+                <div class="footer-col-title">合作与关于</div>
+                <ul class="footer-links">
+                    <li><a href="#" class="footer-link">关于灵感航班</a></li>
+                    <li><a href="#" class="footer-link">航司接入合作</a></li>
+                </ul>
+                <p class="footer-disclaimer-new">
+                    本平台数据基于 Mock 演示。真实落地需接入
+                    航司聚合 API 并建立实时缓存机制，超过15分钟
+                    未更新的价格将标注'待验证'以规避幽灵票问题。
+                </p>
+            </div>
+        </div>
+        
+        <div class="footer-bottom">
+            © 2026 灵感航班 · 仅供产品演示使用
+        </div>
+    </footer>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // 骨架屏立即可见
+            const skeleton = document.getElementById('skeleton-grid');
+            const realGrid = document.getElementById('real-grid');
+            
+            skeleton.style.display = 'grid';
+            realGrid.style.display = 'none';
+            
+            setTimeout(() => {
+                // 骨架屏淡出
+                skeleton.style.transition = 'opacity 0.4s ease';
+                skeleton.style.opacity = '0';
+                
+                setTimeout(() => {
+                    skeleton.style.display = 'none';
+                    // 真实卡片淡入
+                    realGrid.style.display = 'grid';
+                    realGrid.style.opacity = '0';
+                    realGrid.style.transition = 'opacity 0.5s ease';
+                    requestAnimationFrame(() => {
+                        requestAnimationFrame(() => {
+                            realGrid.style.opacity = '1';
+                        });
+                    });
+                }, 400);
+            }, 1500);
+        });
+
+        function flightApp() {
+            return {
+                budgetLimit: 3000,
+                departureCity: '上海',
+                searchQuery: '',
+                searchActive: false,
+                selectedType: 'all', // all, domestic, visa-free, visa-required
+                selectedScenes: [],
+                isModalOpen: false,
+                selectedFlight: null,
+                addLuggage: false,
+                addSeat: false,
+                bookingStatus: 'idle', // idle, booking, success
+                isChannelModalOpen: false,
+                notifiedFlightIds: [], 
+            monitoredDestinations: [],
+            isAlertCenterOpen: false,
+            toastVisible: false,
+            selectedHeroScene: null, // For Hero Search
+            isHeroSceneDropdownOpen: false,
+            selectedTimeIntent: '📅 随时出发',
+            heroSceneOptions: [
+                { label: '✨ 随便，给我惊喜', value: '' },
+                { label: '🏖️ 海岛 · 阳光沙滩', value: '海岛' },
+                { label: '🏙️ 城市 · 街头漫游', value: '城市' },
+                { label: '❄️ 雪山 · 冰雪世界', value: '雪山' },
+                { label: '🌿 自然 · 森林秘境', value: '自然' },
+                { label: '🎌 文化 · 历史古城', value: '文化' }
+            ],
+            heroImages: [
+                'https://images.weserv.nl/?url=https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1600&q=80',
+                'https://images.weserv.nl/?url=https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1600&q=80',
+                'https://images.weserv.nl/?url=https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=1600&q=80',
+                'https://images.weserv.nl/?url=https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=1600&q=80',
+                'https://images.weserv.nl/?url=https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1600&q=80'
+            ],
+            currentHeroIndex: 0,
+            isTimeIntentDropdownOpen: false,
+            timeIntentOptions: ['📅 随时出发', '🌸 5月周末', '🎋 6月端午', '☀️ 暑假 7-8月', '🗓️ 指定日期...'],
+            selectedDate: '',
+            toastMessage: '',
+                isLoading: true,
+                syncFast: false,
+
+                init() {
+                    // Hero 轮播逻辑
+                    setInterval(() => {
+                        this.currentHeroIndex = (this.currentHeroIndex + 1) % this.heroImages.length;
+                    }, 5000);
+
+                    // 初始化随机查看人数
+                    this.flights.forEach(f => {
+                        if (!f.viewCount) f.viewCount = Math.floor(Math.random() * (200 - 50 + 1)) + 50;
+                    });
+                    
+                    setInterval(() => {
+                        this.flights.forEach(f => f.discoveredMinutesAgo++);
+                    }, 60000);
+
+                    // 数据同步指示器逻辑
+                    setInterval(() => {
+                        this.syncFast = true;
+                        setTimeout(() => {
+                            this.syncFast = false;
+                        }, 1000);
+                    }, 30000);
+                },
+
+                getFixedRandom(id) {
+                    // 根据 id 生成固定的随机数 (30-100之间)
+                    const seed = parseInt(id) || 1;
+                    return (seed * 17) % 71 + 30;
+                },
+
+                isHeroMatched(flight) {
+                     if (this.selectedHeroScene === null || this.selectedHeroScene === '' || !['海岛', '城市', '雪山'].includes(this.selectedHeroScene)) {
+                         return true;
+                     }
+                     return flight.scene && flight.scene.includes(this.selectedHeroScene);
+                 },
+
+                showToast(msg) {
+                    this.toastMessage = msg;
+                    this.toastVisible = true;
+                    setTimeout(() => {
+                        this.toastVisible = false;
+                    }, 3000);
+                },
+
+                featuredDestinations: [
+                    { name: '大阪', minPrice: 899, color: '#FFF0E6', tag: '立减¥500' },
+                    { name: '东京', minPrice: 1050, color: '#E8F0FE', tag: '折扣航班' },
+                    { name: '曼谷', minPrice: 1280, color: '#E6F6F0', tag: '免签直飞' },
+                    { name: '巴厘岛', minPrice: 1680, color: '#FEF3E2', tag: '海岛特价' },
+                    { name: '北海道', minPrice: 2199, color: '#EEF2FF', tag: '滑雪季特价' },
+                    { name: '普吉岛', minPrice: 980, color: '#E0F7F4', tag: '限时闪促' }
+                ],
+
+                scenes: [
+                    { id: 1, label: '海岛', icon: '🏖️' },
+                    { id: 2, label: '城市', icon: '🏙️' },
+                    { id: 3, label: '雪山', icon: '❄️' },
+                    { id: 4, label: '自然', icon: '🌿' },
+                    { id: 5, label: '文化', icon: '🎌' },
+                    { id: 6, label: '直飞', icon: '✈️' }
+                ],
+
+                scrollToFeed() {
+                    const el = document.getElementById('feed-anchor');
+                    if (el) {
+                        el.scrollIntoView({ behavior: 'smooth' });
+                    }
+                },
+
+                flights: [
+                    {
+                        "id": "1",
+                        "from": "上海",
+                        "fromCode": "sha",
+                        "to": "大阪",
+                        "toCode": "kix",
+                        "domestic": false,
+                        "visaType": "免签",
+                        "price": 899,
+                        "originalPrice": 2100,
+                        "airline": "国航",
+                        "airlineCode": "CA",
+                        "flightType": "直飞",
+                        "duration": "3h30min",
+                        "departDate": "2025-05-03",
+                        "returnDate": "2025-05-06",
+                        "tags": ["历史低价", "含托运", "可退改", "直飞"],
+                        "badge": "历史低价",
+                        "badgeType": "hot",
+                        "luggageIncluded": true,
+                        "luggageFee": 0,
+                        "seatFee": 50,
+                        "mealIncluded": false,
+                        "refundable": true,
+                        "priceHistory": [1800, 1650, 1400, 1200, 1050, 920, 899],
+                        "percentileLow": 83,
+                        "seatsLeft": 12,
+                        "scene": ["城市", "免签", "直飞"],
+                        "ptoDays": 1,
+                        "discoveredMinutesAgo": 3,
+                        "viewCount": 156
+                    },
+                    {
+                        "id": "2",
+                        "from": "上海",
+                        "fromCode": "pvg",
+                        "to": "曼谷",
+                        "toCode": "bkk",
+                        "domestic": false,
+                        "visaType": "免签",
+                        "price": 1280,
+                        "originalPrice": 3200,
+                        "airline": "春秋航空",
+                        "airlineCode": "9C",
+                        "flightType": "直飞",
+                        "duration": "4h50min",
+                        "departDate": "2025-05-10",
+                        "returnDate": "2025-05-15",
+                        "tags": ["限时闪促", "海岛", "直飞"],
+                        "badge": "限时闪促",
+                        "badgeType": "flash",
+                        "luggageIncluded": false,
+                        "luggageFee": 200,
+                        "seatFee": 60,
+                        "mealIncluded": false,
+                        "refundable": false,
+                        "priceHistory": [2800, 2500, 2200, 1900, 1600, 1400, 1280],
+                        "percentileLow": 91,
+                        "seatsLeft": 3,
+                        "scene": ["海岛", "免签", "直飞"],
+                        "ptoDays": 0,
+                        "discoveredMinutesAgo": 7,
+                        "viewCount": 89
+                    },
+                    {
+                        "id": "3",
+                        "from": "上海",
+                        "fromCode": "pvg",
+                        "to": "北海道",
+                        "toCode": "cts",
+                        "domestic": false,
+                        "visaType": "免签",
+                        "price": 2199,
+                        "originalPrice": 4500,
+                        "airline": "全日空",
+                        "airlineCode": "NH",
+                        "flightType": "直飞",
+                        "duration": "3h",
+                        "departDate": "2025-02-01",
+                        "returnDate": "2025-02-05",
+                        "tags": ["仅剩3席", "雪山", "含托运", "直飞"],
+                        "badge": "仅剩3席",
+                        "badgeType": "scarce",
+                        "luggageIncluded": true,
+                        "luggageFee": 0,
+                        "seatFee": 80,
+                        "mealIncluded": true,
+                        "refundable": true,
+                        "priceHistory": [4200, 3800, 3400, 3000, 2800, 2500, 2199],
+                        "percentileLow": 95,
+                        "seatsLeft": 3,
+                        "scene": ["雪山", "直飞"],
+                        "ptoDays": 2,
+                        "discoveredMinutesAgo": 12,
+                        "viewCount": 124
+                    },
+                    {
+                        "id": "4",
+                        "from": "上海",
+                        "fromCode": "pvg",
+                        "to": "巴厘岛",
+                        "toCode": "dps",
+                        "domestic": false,
+                        "visaType": "免签",
+                        "price": 1680,
+                        "originalPrice": 3800,
+                        "airline": "东方航空",
+                        "airlineCode": "MU",
+                        "flightType": "1次中转",
+                        "duration": "8h20min",
+                        "departDate": "2025-05-17",
+                        "returnDate": "2025-05-22",
+                        "tags": ["价格回落", "海岛", "含托运"],
+                        "badge": "价格回落",
+                        "badgeType": "drop",
+                        "luggageIncluded": true,
+                        "luggageFee": 0,
+                        "seatFee": 40,
+                        "mealIncluded": true,
+                        "refundable": false,
+                        "priceHistory": [3200, 3000, 3400, 3800, 3200, 2100, 1680],
+                        "percentileLow": 78,
+                        "seatsLeft": 20,
+                        "scene": ["海岛"],
+                        "ptoDays": 0,
+                        "discoveredMinutesAgo": 18,
+                        "viewCount": 67
+                    },
+                    {
+                        "id": "5",
+                        "from": "上海",
+                        "fromCode": "sha",
+                        "to": "东京",
+                        "toCode": "nrt",
+                        "domestic": false,
+                        "visaType": "免签",
+                        "price": 1050,
+                        "originalPrice": 2600,
+                        "airline": "吉祥航空",
+                        "airlineCode": "HO",
+                        "flightType": "直飞",
+                        "duration": "3h",
+                        "departDate": "2025-04-26",
+                        "returnDate": "2025-04-29",
+                        "tags": ["历史低价", "城市", "免签", "直飞"],
+                        "badge": "历史低价",
+                        "badgeType": "hot",
+                        "luggageIncluded": false,
+                        "luggageFee": 180,
+                        "seatFee": 50,
+                        "mealIncluded": false,
+                        "refundable": true,
+                        "priceHistory": [2400, 2100, 1800, 1500, 1300, 1100, 1050],
+                        "percentileLow": 88,
+                        "seatsLeft": 8,
+                        "scene": ["城市", "免签", "直飞", "周末出发"],
+                        "ptoDays": 1,
+                        "discoveredMinutesAgo": 5,
+                        "viewCount": 198
+                    },
+                    {
+                        "id": "6",
+                        "from": "上海",
+                        "fromCode": "pvg",
+                        "to": "普吉岛",
+                        "toCode": "hkt",
+                        "domestic": false,
+                        "visaType": "免签",
+                        "price": 980,
+                        "originalPrice": 2400,
+                        "airline": "泰国航空",
+                        "airlineCode": "TG",
+                        "flightType": "直飞",
+                        "duration": "5h",
+                        "departDate": "2025-05-24",
+                        "returnDate": "2025-05-28",
+                        "tags": ["限时闪促", "海岛", "含托运", "直飞"],
+                        "badge": "限时闪促",
+                        "badgeType": "flash",
+                        "luggageIncluded": true,
+                        "luggageFee": 0,
+                        "seatFee": 60,
+                        "mealIncluded": true,
+                        "refundable": false,
+                        "priceHistory": [2200, 2000, 1800, 1500, 1300, 1100, 980],
+                        "percentileLow": 92,
+                        "seatsLeft": 5,
+                        "scene": ["海岛", "直飞"],
+                        "ptoDays": 0,
+                        "discoveredMinutesAgo": 9,
+                        "viewCount": 112
+                    },
+                    {
+                        "id": "7",
+                        "from": "上海",
+                        "fromCode": "sha",
+                        "to": "三亚",
+                        "toCode": "syx",
+                        "domestic": true,
+                        "visaType": "免签",
+                        "price": 650,
+                        "originalPrice": 1800,
+                        "airline": "海南航空",
+                        "airlineCode": "HU",
+                        "flightType": "直飞",
+                        "duration": "3h15min",
+                        "departDate": "2025-05-15",
+                        "returnDate": "2025-05-18",
+                        "tags": ["历史低价", "海岛", "直飞"],
+                        "badge": "历史低价",
+                        "badgeType": "hot",
+                        "luggageIncluded": true,
+                        "luggageFee": 0,
+                        "seatFee": 30,
+                        "mealIncluded": true,
+                        "refundable": true,
+                        "priceHistory": [1500, 1300, 1100, 900, 800, 700, 650],
+                        "percentileLow": 85,
+                        "seatsLeft": 15,
+                        "scene": ["海岛", "直飞"],
+                        "ptoDays": 0,
+                        "discoveredMinutesAgo": 15,
+                        "viewCount": 145
+                    },
+                    {
+                        "id": "8",
+                        "from": "北京",
+                        "fromCode": "pek",
+                        "to": "成都",
+                        "toCode": "ctu",
+                        "domestic": true,
+                        "visaType": "免签",
+                        "price": 580,
+                        "originalPrice": 1500,
+                        "airline": "川航",
+                        "airlineCode": "3U",
+                        "flightType": "直飞",
+                        "duration": "3h",
+                        "departDate": "2025-05-20",
+                        "returnDate": "2025-05-23",
+                        "tags": ["限时闪促", "城市", "直飞"],
+                        "badge": "限时闪促",
+                        "badgeType": "flash",
+                        "luggageIncluded": true,
+                        "luggageFee": 0,
+                        "seatFee": 20,
+                        "mealIncluded": true,
+                        "refundable": true,
+                        "priceHistory": [1200, 1000, 900, 800, 750, 650, 580],
+                        "percentileLow": 88,
+                        "seatsLeft": 5,
+                        "scene": ["城市", "直飞"],
+                        "ptoDays": 1,
+                        "discoveredMinutesAgo": 22,
+                        "viewCount": 78
+                    },
+                    {
+                        "id": "9",
+                        "from": "广州",
+                        "fromCode": "can",
+                        "to": "新加坡",
+                        "toCode": "sin",
+                        "domestic": false,
+                        "visaType": "免签",
+                        "price": 1150,
+                        "originalPrice": 2800,
+                        "airline": "南航",
+                        "airlineCode": "CZ",
+                        "flightType": "直飞",
+                        "duration": "4h",
+                        "departDate": "2025-06-05",
+                        "returnDate": "2025-06-10",
+                        "tags": ["价格回落", "城市", "免签", "直飞"],
+                        "badge": "价格回落",
+                        "badgeType": "drop",
+                        "luggageIncluded": true,
+                        "luggageFee": 0,
+                        "seatFee": 40,
+                        "mealIncluded": true,
+                        "refundable": true,
+                        "priceHistory": [2500, 2300, 2600, 2400, 1800, 1400, 1150],
+                        "percentileLow": 82,
+                        "seatsLeft": 10,
+                        "scene": ["城市", "免签", "直飞"],
+                        "ptoDays": 2,
+                        "discoveredMinutesAgo": 4,
+                        "viewCount": 167
+                    },
+                    {
+                        "id": "10",
+                        "from": "杭州",
+                        "fromCode": "hgh",
+                        "to": "丽江",
+                        "toCode": "ljg",
+                        "domestic": true,
+                        "visaType": "免签",
+                        "price": 720,
+                        "originalPrice": 1900,
+                        "airline": "长龙航空",
+                        "airlineCode": "GJ",
+                        "flightType": "直飞",
+                        "duration": "3h20min",
+                        "departDate": "2025-06-12",
+                        "returnDate": "2025-06-16",
+                        "tags": ["仅剩3席", "雪山", "直飞"],
+                        "badge": "仅剩3席",
+                        "badgeType": "scarce",
+                        "luggageIncluded": true,
+                        "luggageFee": 0,
+                        "seatFee": 30,
+                        "mealIncluded": false,
+                        "refundable": false,
+                        "priceHistory": [1600, 1450, 1300, 1100, 950, 800, 720],
+                        "percentileLow": 90,
+                        "seatsLeft": 2,
+                        "scene": ["雪山", "直飞"],
+                        "ptoDays": 1,
+                        "discoveredMinutesAgo": 30,
+                        "viewCount": 54
+                    },
+                    {
+                        "id": "11",
+                        "from": "上海",
+                        "fromCode": "pvg",
+                        "to": "首尔",
+                        "toCode": "icn",
+                        "domestic": false,
+                        "visaType": "需办签",
+                        "price": 1150,
+                        "originalPrice": 2200,
+                        "airline": "韩亚航空",
+                        "airlineCode": "OZ",
+                        "flightType": "直飞",
+                        "duration": "2h",
+                        "departDate": "2025-05-15",
+                        "returnDate": "2025-05-18",
+                        "tags": ["价格回落", "城市", "需办签"],
+                        "badge": "价格回落",
+                        "badgeType": "drop",
+                        "luggageIncluded": true,
+                        "luggageFee": 0,
+                        "seatFee": 40,
+                        "mealIncluded": true,
+                        "refundable": true,
+                        "priceHistory": [2100, 1900, 1700, 1500, 1400, 1250, 1150],
+                        "percentileLow": 80,
+                        "seatsLeft": 12,
+                        "scene": ["城市", "直飞"],
+                        "ptoDays": 0,
+                        "discoveredMinutesAgo": 14,
+                        "viewCount": 132
+                    },
+                    {
+                        "id": "12",
+                        "from": "上海",
+                        "fromCode": "pvg",
+                        "to": "济州岛",
+                        "toCode": "cju",
+                        "domestic": false,
+                        "visaType": "落地签",
+                        "price": 950,
+                        "originalPrice": 1800,
+                        "airline": "春秋航空",
+                        "airlineCode": "9C",
+                        "flightType": "直飞",
+                        "duration": "1h30min",
+                        "departDate": "2025-05-20",
+                        "returnDate": "2025-05-23",
+                        "tags": ["限时闪促", "海岛", "落地签"],
+                        "badge": "限时闪促",
+                        "badgeType": "flash",
+                        "luggageIncluded": false,
+                        "luggageFee": 150,
+                        "seatFee": 30,
+                        "mealIncluded": false,
+                        "refundable": true,
+                        "priceHistory": [1700, 1600, 1400, 1200, 1100, 1000, 950],
+                        "percentileLow": 88,
+                        "seatsLeft": 4,
+                        "scene": ["海岛", "直飞"],
+                        "ptoDays": 1,
+                        "discoveredMinutesAgo": 25,
+                        "viewCount": 94
+                    }
+                ],
+
+                get filteredFlights() {
+                    return this.flights.filter(f => {
+                        const priceMatch = f.price <= this.budgetLimit;
+                        const sceneMatch = this.selectedScenes.length === 0 || 
+                                          this.selectedScenes.every(s => f.scene.includes(s));
+                        const departureMatch = f.from === this.departureCity;
+                        
+                        let typeMatch = true;
+                        if (this.selectedType === 'domestic') typeMatch = f.domestic;
+                        else if (this.selectedType === 'all') typeMatch = !f.domestic;
+                        else if (this.selectedType === 'visa-free') typeMatch = !f.domestic && (f.visaType === '免签' || f.visaType === '落地签');
+                        else if (this.selectedType === 'visa-required') typeMatch = !f.domestic && f.visaType === '需办签';
+
+                        const searchMatch = this.searchQuery === '' || 
+                                           f.to.toLowerCase().includes(this.searchQuery.toLowerCase()) ||
+                                           f.toCode.toLowerCase().includes(this.searchQuery.toLowerCase());
+                        
+                        return priceMatch && sceneMatch && departureMatch && typeMatch && searchMatch;
+                    });
+                },
+
+                toggleScene(scene) {
+                    if (this.selectedScenes.includes(scene)) {
+                        this.selectedScenes = this.selectedScenes.filter(s => s !== scene);
+                    } else {
+                        this.selectedScenes.push(scene);
+                    }
+                },
+
+                getBadgeText(flight) {
+                    const drop = Math.round((flight.originalPrice - flight.price) / flight.originalPrice * 100);
+                    if (flight.badgeType === 'scarce') return flight.badge;
+                    
+                    let icon = '';
+                    if (flight.badgeType === 'hot') icon = '🔥';
+                    else if (flight.badgeType === 'flash') icon = '⚡';
+                    else if (flight.badgeType === 'drop') icon = '💡';
+                    
+                    return `${icon} -${drop}% ${flight.badge}`;
+                },
+
+                openModal(flight) {
+                    this.selectedFlight = flight;
+                    this.addLuggage = false;
+                    this.addSeat = false;
+                    this.bookingStatus = 'idle';
+                    this.isModalOpen = true;
+                    document.body.classList.add('drawer-open');
+                    document.body.style.overflow = 'hidden';
+                },
+
+                closeModal() {
+                    this.isModalOpen = false;
+                    document.body.classList.remove('drawer-open');
+                    setTimeout(() => {
+                        this.selectedFlight = null;
+                        document.body.style.overflow = 'auto';
+                    }, 300);
+                },
+
+                startBooking() {
+                    this.bookingStatus = 'booking';
+                    const url = `https://flights.ctrip.com/online/list/oneway-${this.selectedFlight.fromCode}-${this.selectedFlight.toCode}?depdate=${this.selectedFlight.departDate}`;
+                    setTimeout(() => {
+                        this.bookingStatus = 'success';
+                        setTimeout(() => {
+                            window.open(url, '_blank');
+                            this.closeModal();
+                        }, 800);
+                    }, 1200);
+                },
+
+                selectChannel(channel) {
+                    this.isChannelModalOpen = false;
+                    this.showToast(`正在为您跳转 ${channel} 预订页面...`);
+                    
+                    let url = '';
+                    const from = this.selectedFlight.fromCode;
+                    const to = this.selectedFlight.toCode;
+                    const date = this.selectedFlight.departDate;
+
+                    if (channel === '美团旅行') {
+                        // 模拟美团机票跳转逻辑
+                        url = `https://www.meituan.com/flight/`;
+                    } else if (channel === '航司官网') {
+                        // 模拟跳转至对应航司官网
+                        url = `https://www.google.com/search?q=${encodeURIComponent(this.selectedFlight.airline + '官网')}`;
+                    } else {
+                        // 其他平台使用携程格式
+                        url = `https://flights.ctrip.com/online/list/oneway-${from}-${to}?depdate=${date}`;
+                    }
+
+                    setTimeout(() => {
+                        window.open(url, '_blank');
+                        this.closeModal();
+                    }, 1500);
+                },
+
+                toggleNotification(flightId) {
+                    if (this.notifiedFlightIds.includes(flightId)) {
+                        this.notifiedFlightIds = this.notifiedFlightIds.filter(id => id !== flightId);
+                    } else {
+                        this.notifiedFlightIds.push(flightId);
+                        this.showToast(`已为您监控 ${this.selectedFlight.from}→${this.selectedFlight.to} 的价格变动`);
+                    }
+                },
+
+                showToast(message) {
+                    this.toastMessage = message;
+                    this.toastVisible = true;
+                    setTimeout(() => {
+                        this.toastVisible = false;
+                    }, 3000);
+                },
+
+                isNotified(flightId) {
+                    return this.notifiedFlightIds.includes(flightId);
+                },
+
+                calculateTotalPrice() {
+                    if (!this.selectedFlight) return 0;
+                    let total = this.selectedFlight.price;
+                    if (this.addLuggage && !this.selectedFlight.luggageIncluded) {
+                        total += this.selectedFlight.luggageFee;
+                    }
+                    if (this.addSeat) {
+                        total += this.selectedFlight.seatFee;
+                    }
+                    return total;
+                },
+
+                formatDate(dateStr) {
+                    const date = new Date(dateStr);
+                    const months = ['1月', '2月', '3月', '4月', '5月', '6月', '7月', '8月', '9月', '10月', '11月', '12月'];
+                    const days = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+                    return `${months[date.getMonth()]}${date.getDate()}日(${days[date.getDay()]})`;
+                },
+
+                calculateDays(start, end) {
+                    const diffTime = Math.abs(new Date(end) - new Date(start));
+                    return Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+                },
+
+                getBadgeColor(type) {
+                    const colors = {
+                        hot: '#FF4757',
+                        flash: '#FF8C00',
+                        scarce: '#A855F7',
+                        drop: '#00C9A7'
+                    };
+                    return colors[type] || '#4F8EF7';
+                },
+
+                generatePath(history, isArea = true) {
+                    if (!history || history.length === 0) return '';
+                    const max = Math.max(...history);
+                    const min = Math.min(...history);
+                    const range = max - min;
+                    const width = 390;
+                    const height = 100;
+                    const step = width / (history.length - 1);
+
+                    let points = history.map((val, i) => {
+                        const x = i * step;
+                        const y = height - ((val - min) / range * (height - 40) + 20);
+                        return `${x},${y}`;
+                    });
+
+                    let d = `M ${points[0]}`;
+                    for (let i = 1; i < points.length; i++) {
+                        d += ` L ${points[i]}`;
+                    }
+
+                    if (isArea) {
+                        d += ` L ${width},${height} L 0,${height} Z`;
+                    }
+                    return d;
+                },
+
+                getPriceY(price, history) {
+                    const max = Math.max(...history);
+                    const min = Math.min(...history);
+                    const range = max - min;
+                    const height = 100;
+                    return height - ((price - min) / range * (height - 40) + 20);
+                }
+            }
+        }
+    </script>
+</body>
+</html>
