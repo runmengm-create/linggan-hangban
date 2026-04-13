@@ -11,6 +11,11 @@
     <!-- Alpine.js -->
     <script defer src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js"></script>
     <style>
+        html {
+            overflow-x: hidden;
+            max-width: 100vw;
+        }
+
         :root {
             /* 背景 */
             --bg-primary: #F7F5F0;
@@ -179,15 +184,18 @@
         .hero-search-capsule {
             width: 100%;
             height: 64px;
-            background: rgba(255, 255, 255, 0.95);
-            backdrop-filter: blur(8px);
+            background: rgba(255, 255, 255, 0.65);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
             border-radius: 100px;
             display: flex;
             align-items: center;
             padding: 0 8px 0 32px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            box-shadow: 0 10px 40px rgba(0,0,0,0.15);
             position: relative;
             z-index: 1001;
+            overflow: visible;
         }
 
         .search-segment {
@@ -459,7 +467,15 @@
             display: flex;
             align-items: center;
             gap: 12px;
-            flex-wrap: wrap;
+            flex-wrap: nowrap;
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none; /* Firefox */
+            padding-bottom: 4px;
+        }
+
+        .filter-pill-group::-webkit-scrollbar {
+            display: none; /* Chrome/Safari */
         }
 
         .type-pill-capsule {
@@ -472,6 +488,8 @@
             font-weight: 500;
             cursor: pointer;
             transition: var(--transition-base);
+            white-space: nowrap;
+            flex-shrink: 0;
         }
 
         .type-pill-capsule.active {
@@ -493,6 +511,297 @@
             display: flex;
             align-items: center;
             gap: 4px;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+
+        @media (max-width: 768px) {
+            /* 所有元素禁止超出屏幕宽度 */
+            * {
+                max-width: 100vw;
+                box-sizing: border-box;
+            }
+
+            /* 整体容器 */
+            body {
+                overflow-x: hidden;
+                max-width: 100vw;
+            }
+            
+            .container, main, section {
+                width: 100%;
+                max-width: 100%;
+                padding-left: 16px;
+                padding-right: 16px;
+                box-sizing: border-box;
+                overflow: hidden; /* 防止子元素撑开 */
+            }
+
+            /* 搜索框不超出屏幕 */
+            .hero-search-wrapper {
+                padding: 0 16px;
+                margin-top: 40px;
+                width: 100vw;
+                max-width: 100vw;
+                box-sizing: border-box;
+            }
+
+            .hero-search-capsule {
+                flex-direction: column;
+                width: calc(100vw - 32px) !important;
+                max-width: calc(100vw - 32px) !important;
+                height: auto;
+                border-radius: 16px;
+                padding: 16px;
+                gap: 0;
+                background: rgba(255, 255, 255, 0.75) !important;
+                backdrop-filter: blur(20px) !important;
+                -webkit-backdrop-filter: blur(20px) !important;
+                margin: 0 auto;
+            }
+
+            /* 热门目的地横滑容器 */
+            .featured-section {
+                padding-left: 16px;
+                padding-right: 16px;
+                overflow: visible; /* 允许标题显示 */
+                max-width: 100vw;
+            }
+
+            .featured-scroll-container {
+                margin-left: -16px;
+                width: 100vw;
+                max-width: 100vw;
+                padding-left: 16px;
+                overflow-x: auto;
+                overflow-y: visible;
+                -webkit-overflow-scrolling: touch;
+            }
+
+            /* 卡片Grid */
+            #skeleton-grid, #real-grid {
+                grid-template-columns: 1fr !important;
+                gap: 16px;
+                width: 100% !important;
+                max-width: 100% !important;
+                overflow: hidden;
+            }
+
+            /* 抽屉/弹窗 */
+            .drawer-content {
+                max-width: 100vw !important;
+                width: 100% !important;
+                height: 85vh;
+                top: auto !important;
+                bottom: 0;
+                left: 0 !important;
+                right: 0;
+                border-radius: 20px 20px 0 0;
+                transform: translateY(100%);
+            }
+
+            /* Footer */
+            footer {
+                max-width: 100vw;
+                overflow: hidden;
+            }
+
+            /* 底部收尾模块 */
+            .feed-cta {
+                max-width: 100vw;
+                overflow: hidden;
+                padding-left: 16px;
+                padding-right: 16px;
+            }
+
+            .cta-input {
+                max-width: calc(100% - 32px);
+            }
+
+            /* 保持原有的响应式逻辑 */
+            .hero-section {
+                height: 60vh;
+                min-height: 400px;
+                padding-top: 100px;
+            }
+
+            .hero-title {
+                font-size: 42px !important;
+                margin-bottom: 8px;
+            }
+
+            .hero-subtitle {
+                font-size: 16px !important;
+            }
+
+            .search-segment {
+                width: 100%;
+                border-right: none !important;
+                border-bottom: 1px solid rgba(0,0,0,0.05);
+                padding: 12px 0;
+                justify-content: center;
+                height: auto;
+                min-height: 52px;
+            }
+
+            .search-segment:last-of-type {
+                border-bottom: none;
+            }
+
+            .search-btn-text {
+                width: 100%;
+                margin-left: 0;
+                margin-top: 12px;
+                height: 52px;
+                border-radius: 12px;
+                text-align: center;
+                justify-content: center;
+            }
+
+            /* 所有区块标题行 */
+            .featured-header,
+            .feed-header-row,
+            .section-title,
+            h2, h3 {
+                padding-left: 0;
+                margin-left: 0;
+                overflow: visible;
+            }
+
+            /* 热门目的地区块 */
+            .featured-section {
+                padding-left: 16px;
+                padding-right: 16px;
+                overflow: visible;
+            }
+
+            /* 今日特价情报区块 */
+            .feed-section {
+                padding-left: 16px;
+                padding-right: 16px;
+                overflow: visible;
+            }
+
+            /* 修复横向滚动容器不裁切标题 */
+            .featured-scroll-container {
+                margin-left: -16px;
+                width: calc(100% + 32px);
+                padding-left: 16px;
+                overflow-x: auto;
+                overflow-y: visible;
+            }
+
+            /* 筛选条（国际/海岛等Tag）移动端换行 */
+            .filter-pill-group {
+                flex-wrap: wrap;
+                gap: 8px;
+                overflow: visible;
+            }
+
+            /* 预算滑块移动端全宽 */
+            .budget-control-inline {
+                width: 100%;
+                max-width: 100%;
+                margin-top: 12px;
+            }
+
+            .budget-slider-custom {
+                width: 100%;
+            }
+
+            .featured-dest-card {
+                width: 220px;
+                min-width: 220px;
+                flex-shrink: 0;
+            }
+
+            /* 特价Feed卡片：移动端单列 */
+            #skeleton-grid, #real-grid {
+                grid-template-columns: 1fr !important;
+                gap: 16px;
+            }
+
+            .flight-card {
+                width: 100%;
+                max-width: 100%;
+            }
+
+            /* 侧边抽屉：移动端改为底部弹出 */
+            .drawer-content {
+                width: 100% !important;
+                height: 85vh;
+                top: auto !important;
+                bottom: 0;
+                left: 0 !important;
+                right: 0;
+                border-radius: 20px 20px 0 0;
+                transform: translateY(100%);
+            }
+
+            .drawer-content.drawer-open {
+                transform: translateY(0) !important;
+            }
+
+            /* 弹窗 */
+            .channel-modal-content {
+                width: calc(100% - 32px) !important;
+                max-width: 100%;
+                margin: 0 16px;
+                left: 0 !important;
+                transform: none !important;
+                border-radius: 16px;
+            }
+
+            /* 底部数据指标三列 */
+            .cta-metrics {
+                gap: 0;
+                justify-content: space-between;
+            }
+
+            .metric-item {
+                padding: 0 12px;
+                flex: 1;
+            }
+
+            .metric-value {
+                font-size: 22px !important;
+            }
+
+            /* 数据实时更新角标 */
+            .status-indicator-fixed {
+                bottom: 12px;
+                left: 12px;
+                font-size: 10px;
+            }
+
+            /* Footer三列改单列 */
+            .footer-content {
+                grid-template-columns: 1fr !important;
+                gap: 32px;
+                text-align: center;
+            }
+
+            .footer-col {
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .footer-links {
+                align-items: center;
+            }
+        }
+
+        /* 超小屏（iPhone SE等，<375px）额外补充 */
+        @media (max-width: 375px) {
+            .featured-dest-card {
+                width: 180px;
+                min-width: 180px;
+            }
+
+            .price-hero {
+                font-size: 24px !important;
+            }
         }
 
         .scene-pill-capsule.active {
@@ -962,23 +1271,25 @@
         /* Channel Modal */
         .channel-modal-overlay {
             position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
+            inset: 0;
             background: rgba(0,0,0,0.5);
             z-index: 1100;
             display: none;
             align-items: center;
             justify-content: center;
             backdrop-filter: blur(2px);
+            padding: 16px;
         }
 
         .channel-modal-overlay.active { display: flex; }
 
         .channel-modal-content {
             background: white;
-            padding: 32px;
+            padding: 32px 20px;
             border-radius: 24px;
-            width: 90%;
+            width: calc(100% - 32px);
             max-width: 400px;
+            margin: 0 auto;
         }
 
         .channel-title {
@@ -1472,11 +1783,6 @@
             gap: 4px;
             margin-top: 4px;
         }
-
-        /* Rest of existing styles... */
-    </style>
-
-        /* Rest of existing styles... */
     </style>
 </head>
 <body x-data="flightApp()">
@@ -1588,7 +1894,7 @@
                     </select>
                 </div>
                 <!-- Segment 2: Scene Selection (Custom Dropdown) -->
-                <div class="search-segment" style="position: relative;" @click.outside="isHeroSceneDropdownOpen = false">
+                <div class="search-segment" style="position: relative;" @click.outside="isHeroSceneDropdownOpen = false" @touchstart.outside="isHeroSceneDropdownOpen = false">
                     <div class="hero-dropdown-trigger" 
                          :class="{ 'placeholder': selectedHeroScene === null }"
                          @click="isHeroSceneDropdownOpen = !isHeroSceneDropdownOpen"
@@ -1599,13 +1905,14 @@
                         <template x-for="option in heroSceneOptions" :key="option.value">
                             <div class="hero-dropdown-item" 
                                  @click="selectedHeroScene = option.value; isHeroSceneDropdownOpen = false"
+                                 @touchstart="selectedHeroScene = option.value; isHeroSceneDropdownOpen = false"
                                  x-text="option.label">
                             </div>
                         </template>
                     </div>
                 </div>
                 <!-- Segment 3: Time Intent (Custom Dropdown) -->
-                <div class="search-segment" style="position: relative;" @click.outside="isTimeIntentDropdownOpen = false">
+                <div class="search-segment" style="position: relative;" @click.outside="isTimeIntentDropdownOpen = false" @touchstart.outside="isTimeIntentDropdownOpen = false">
                     <div class="hero-dropdown-trigger" 
                          @click="isTimeIntentDropdownOpen = !isTimeIntentDropdownOpen">
                         <span x-text="selectedTimeIntent"></span>
@@ -1616,7 +1923,8 @@
                         <template x-for="option in timeIntentOptions" :key="option">
                             <div class="hero-dropdown-item" 
                                  style="display: flex; justify-content: space-between; align-items: center;"
-                                 @click="if(option === '🗓️ 指定日期...') { $refs.dateInput.showPicker() } else { selectedTimeIntent = option; isTimeIntentDropdownOpen = false }">
+                                 @click="if(option === '🗓️ 指定日期...') { $refs.dateInput.showPicker() } else { selectedTimeIntent = option; isTimeIntentDropdownOpen = false }"
+                                 @touchstart="if(option === '🗓️ 指定日期...') { $refs.dateInput.showPicker() } else { selectedTimeIntent = option; isTimeIntentDropdownOpen = false }">
                                 <span x-text="option"></span>
                                 <span x-show="selectedTimeIntent === option" style="color: #34D399; font-size: 12px;">✓</span>
                             </div>
@@ -1652,8 +1960,9 @@
                             <div class="featured-card-btn">查看</div>
                         </div>
                         <div class="featured-card-right">
-                            <img :src="'https://images.weserv.nl/?url=https://images.unsplash.com/featured/400x300/?' + encodeURIComponent(dest.name) + ',landscape,scenic'" 
+                            <img :src="'https://wsrv.nl/?url=https://images.unsplash.com/photo-' + dest.unsplashId + '?auto=format&fit=crop&w=400&q=80&type=webp'" 
                                  :alt="dest.name"
+                                 crossorigin="anonymous"
                                  :onerror="'this.src=\'https://picsum.photos/400/300?random=' + dest.name + '\''">
                             <div class="badge" style="position: absolute; bottom: 12px; left: -10px; z-index: 2;">
                                 <span x-text="dest.tag"></span>
@@ -1724,8 +2033,9 @@
                          :style="isHeroMatched(flight) ? 'opacity: 1; transform: scale(1);' : 'opacity: 0; transform: scale(0.95); pointer-events: none;'"
                          style="transition: 0.25s ease;">
                         <div class="card-image-wrapper">
-                            <img :src="'https://images.weserv.nl/?url=https://images.unsplash.com/featured/800x500/?' + encodeURIComponent(flight.to) + ',landscape,scenic'" 
+                            <img :src="'https://wsrv.nl/?url=https://images.unsplash.com/featured/800x500/?' + encodeURIComponent(flight.to) + ',landscape,scenic&type=webp&nocache=1'" 
                                  class="card-image" 
+                                 crossorigin="anonymous"
                                  :alt="flight.to"
                                  :onerror="'this.onerror=null;this.src=\'https://picsum.photos/800/500?random=' + (parseInt(flight.id) % 20 + 1) + '\''">
                             <div class="card-overlay"></div>
@@ -1872,7 +2182,7 @@
                             <div @click="openModal(flights.find(f => f.id === fId)); isAlertCenterOpen = false" 
                                  style="cursor: pointer; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.05); display: flex;">
                                 <div style="width: 100px; height: 100px;">
-                                    <img :src="'https://images.weserv.nl/?url=https://images.unsplash.com/featured/200x200/?' + encodeURIComponent(flights.find(f => f.id === fId).to) + ',landscape,scenic'" 
+                                    <img :src="'https://wsrv.nl/?url=https://images.unsplash.com/featured/200x200/?' + encodeURIComponent(flights.find(f => f.id === fId).to) + ',landscape,scenic'" 
                                          style="width: 100%; height: 100%; object-fit: cover;">
                                 </div>
                                 <div style="flex: 1; padding: 12px 16px; display: flex; flex-direction: column; justify-content: space-between;">
@@ -1904,7 +2214,7 @@
                 <div class="drawer-scroll-area">
                     <!-- Drawer Header -->
                     <div class="drawer-header">
-                        <img :src="'https://images.weserv.nl/?url=https://images.unsplash.com/featured/800x500/?' + encodeURIComponent(selectedFlight.to) + ',landscape,scenic'" 
+                        <img :src="'https://wsrv.nl/?url=https://images.unsplash.com/featured/800x500/?' + encodeURIComponent(selectedFlight.to) + ',landscape,scenic'" 
                              class="drawer-header-img" 
                              :alt="selectedFlight.to"
                              :onerror="'this.onerror=null;this.src=\'https://picsum.photos/800/500?random=' + (parseInt(selectedFlight.id) % 20 + 1) + '\''">
@@ -2176,11 +2486,11 @@
                 { label: '🎌 文化 · 历史古城', value: '文化' }
             ],
             heroImages: [
-                'https://images.weserv.nl/?url=https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1600&q=80',
-                'https://images.weserv.nl/?url=https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1600&q=80',
-                'https://images.weserv.nl/?url=https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=1600&q=80',
-                'https://images.weserv.nl/?url=https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=1600&q=80',
-                'https://images.weserv.nl/?url=https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1600&q=80'
+                'https://wsrv.nl/?url=https://images.unsplash.com/photo-1464822759023-fed622ff2c3b?auto=format&fit=crop&w=1600&q=80&type=webp',
+                'https://wsrv.nl/?url=https://images.unsplash.com/photo-1501785888041-af3ef285b470?auto=format&fit=crop&w=1600&q=80&type=webp',
+                'https://wsrv.nl/?url=https://images.unsplash.com/photo-1470770841072-f978cf4d019e?auto=format&fit=crop&w=1600&q=80&type=webp',
+                'https://wsrv.nl/?url=https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=1600&q=80&type=webp',
+                'https://wsrv.nl/?url=https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=1600&q=80&type=webp'
             ],
             currentHeroIndex: 0,
             isTimeIntentDropdownOpen: false,
@@ -2236,12 +2546,12 @@
                 },
 
                 featuredDestinations: [
-                    { name: '大阪', minPrice: 899, color: '#FFF0E6', tag: '立减¥500' },
-                    { name: '东京', minPrice: 1050, color: '#E8F0FE', tag: '折扣航班' },
-                    { name: '曼谷', minPrice: 1280, color: '#E6F6F0', tag: '免签直飞' },
-                    { name: '巴厘岛', minPrice: 1680, color: '#FEF3E2', tag: '海岛特价' },
-                    { name: '北海道', minPrice: 2199, color: '#EEF2FF', tag: '滑雪季特价' },
-                    { name: '普吉岛', minPrice: 980, color: '#E0F7F4', tag: '限时闪促' }
+                    { name: '大阪', minPrice: 899, color: '#FFF0E6', tag: '立减¥500', unsplashId: '1541103010881-bd656573c17b' },
+                    { name: '东京', minPrice: 1050, color: '#E8F0FE', tag: '折扣航班', unsplashId: '1493976040374-a97d092212a0' },
+                    { name: '曼谷', minPrice: 1280, color: '#E6F6F0', tag: '免签直飞', unsplashId: '1508933393074-7d86930e484a' },
+                    { name: '巴厘岛', minPrice: 1680, color: '#FEF3E2', tag: '海岛特价', unsplashId: '1537953773315-0aa99c551790' },
+                    { name: '北海道', minPrice: 2199, color: '#EEF2FF', tag: '滑雪季特价', unsplashId: '1542111740-103239401842' },
+                    { name: '普吉岛', minPrice: 980, color: '#E0F7F4', tag: '限时闪促', unsplashId: '1513413173479-ec0d8900951e' }
                 ],
 
                 scenes: [
